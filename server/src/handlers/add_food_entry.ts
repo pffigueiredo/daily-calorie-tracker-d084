@@ -1,12 +1,28 @@
+import { db } from '../db';
+import { foodEntriesTable } from '../db/schema';
 import { type AddFoodEntryInput, type FoodEntry } from '../schema';
 
-export async function addFoodEntry(input: AddFoodEntryInput): Promise<FoodEntry> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is creating a new food entry and persisting it in the database.
-    return Promise.resolve({
-        id: 0, // Placeholder ID
+export const addFoodEntry = async (input: AddFoodEntryInput): Promise<FoodEntry> => {
+  try {
+    // Insert food entry record
+    const result = await db.insert(foodEntriesTable)
+      .values({
         name: input.name,
-        calories: input.calories,
-        created_at: new Date() // Placeholder date
-    } as FoodEntry);
-}
+        calories: input.calories
+      })
+      .returning()
+      .execute();
+
+    // Return the created food entry
+    const foodEntry = result[0];
+    return {
+      id: foodEntry.id,
+      name: foodEntry.name,
+      calories: foodEntry.calories,
+      created_at: foodEntry.created_at
+    };
+  } catch (error) {
+    console.error('Food entry creation failed:', error);
+    throw error;
+  }
+};
